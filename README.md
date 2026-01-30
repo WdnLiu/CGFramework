@@ -1,12 +1,11 @@
 # Computer Graphics
 Follow the instructions below to clone, configure, and build the project.
-In case you do not have Git installed, please refer to [Git](https://git-scm.com/) to install it
 #### Clone and initialize the repository:
+1. Clone the repository to your local machine (https, SSH, ...)
+2. Update repository dependencies
+```bash
+git submodule update --init --recursive
 ```
-git clone --recurse-submodules -j8 https://github.com/upf-gti/CGFrameworkStudent.git
-```
-
-Once cloned, you can optionally [work on your own repository](#creating-your-own-repository).
 
 The framework provided is compatible with all operating systems. Here are the steps for each platform:
 1. [Windows](#windows)
@@ -143,30 +142,3 @@ Then, on VSCode, open the project folder where the CMakeLists.txt is located and
 If not, then open the CMake tab on the left of VSCode, and select the configure and build the project options.
 
 Check [this link](https://gourav.io/blog/setup-vscode-to-run-debug-c-cpp-code) to learn how to debug the framework in Visual Studio Code.
-
-
-## Creating your own repository
-If you want to push your local copy to your own GitHub repo:
-1. Create an empty private repository on GitHub
-2. Open the terminal
-3. Go to the *CGFrameworkStudent* cloned repository folder:
-```
-  cd CGFrameworkStudent
-```
-4. Point your local repo to your newly created GitHub repo:
-```
-  git remote set-url origin <your-repository-url.git>
-```
-5. **IMPORTANT:** verify both "fetch" and "push" are pointing to your repository:
-```
-  git remote -v
-```
-&emsp;&emsp;You should see:
-```
-  origin  <your-repository-url.git> (fetch)
-  origin  <your-repository-url.git> (push)
-```
-6. Update changes to the remote
-```
-  git push
-```
