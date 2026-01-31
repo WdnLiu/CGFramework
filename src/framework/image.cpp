@@ -492,12 +492,12 @@ void Image::DrawLine(Vector2 v0, Vector2 v1, const Color &c)
 	DrawLineBresenham(v0, v1, c);
 }
 
-void Image::DrawRectangle(int x, int y, int w, int h, const Color &borderColor, int borderWidth = 1, bool isFilled = false, const Color &fillColor = Color::WHITE)
+void Image::DrawRectangle(int x, int y, int w, int h, const Color &borderColor, int borderWidth = 1, bool isFilled, const Color& fillColor)
 {
 	DrawRectangle(Vector2(x, y), w, h, borderColor, borderWidth, isFilled, fillColor);
 }
 
-void Image::DrawRectangle(Vector2 v, int w, int h, const Color &borderColor, int borderWidth = 1, bool isFilled = false, const Color &fillColor = Color::WHITE)
+void Image::DrawRectangle(Vector2 v, int w, int h, const Color &borderColor, int borderWidth = 1, bool isFilled, const Color& fillColor)
 {
 	if (isFilled)
 	{
@@ -582,4 +582,65 @@ void Image::DrawHorizontalSpan(int xStart, int xEnd, int y, const Color& color) 
     for (int x = xStart; x <= xEnd; ++x) {
         this->SetPixel(x, y, color);
     }
+}
+
+void Image::InitTable(std::vector<Cell>& table, int minY, int maxY) {
+	for (int i = minY; i <= maxY; ++i) {
+        if (i >= 0 && i < (int)table.size()) {
+            table[i] = Cell();
+        }
+    }
+}
+
+void Image::DrawTriangle(const Vector2& p0, const Vector2& p1, const Vector2& p2, const Color& borderColor, bool isFilled, const Color& fillColor) {
+    
+    int minY = std::min({p0.y, p1.y, p2.y});
+    int maxY = std::max({p0.y, p1.y, p2.y});
+
+    std::vector<Cell> table(maxY + 1);
+    InitTable(table, minY, maxY);
+
+    // Scan lines using the DDA heuristic
+    ScanLineDDA(p0, p1, table);
+    ScanLineDDA(p1, p2, table);
+    ScanLineDDA(p2, p0, table);
+
+    if (isFilled) {
+        FillTriangleRows(table, minY, maxY, fillColor);
+    }
+    
+	DrawLine(p0, p1, borderColor);
+    DrawLine(p1, p2, borderColor);
+    DrawLine(p2, p0, borderColor);
+}
+
+void Image::FillTriangleRows(const std::vector<Cell>& table, int minY, int maxY, const Color& fillColor) {
+    for (int y = minY; y <= maxY; ++y) {
+        if (y < 0 || y >= (int)table.size()) continue;
+
+        for (int x = table[y].minX; x <= table[y].maxX; ++x) {
+            SetPixel(x, y, fillColor);
+        }
+    }
+}
+
+void Image::ScanLineDDA(Vector2 start, Vector2 end, std::vector<Cell>& table) {
+    if (start.y == end.y)
+		return;
+
+    if (start.y > end.y)
+		std::swap(start, end);
+
+    float height = end.y - start.y;
+    float width = end.x - start.x;
+    float step = width / height;
+    float currX = start.x;
+
+    for (int y = (int)start.y; y <= (int)end.y; ++y) {
+        if (y >= 0 && y < (int)table.size()) {
+			table[y].minX = std::min(table[y].minX, (int)currX);
+			table[y].maxX = std::max(table[y].maxX, (int)currX);
+		}
+        currX += step;
+	}
 }

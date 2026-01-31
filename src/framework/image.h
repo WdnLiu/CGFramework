@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <iostream>
 #include "framework.h"
+#include <vector>
 
 // remove unsafe warnings
 #ifndef _CRT_SECURE_NO_WARNINGS
@@ -32,11 +33,20 @@ class Image
 		unsigned char *data; // Bytes with the pixel information
 	} TGAInfo;
 
+	typedef struct sCell
+	{
+		int minX = std::numeric_limits<int>::max();
+		int maxX = std::numeric_limits<int>::min();
+	} Cell;
+
 private:
 	void RenderSymmetricCircleLines(Vector2 center, int x, int y, int radius, int borderWidth, bool isFilled, const Color &fillColor, const Color &borderColor);
 	void DrawCircleRow(Vector2 center, int yOffset, int xOuter, int radius, int borderWidth, bool isFilled, const Color &fillColor, const Color &borderColor);
 	int CalculateInnerX(int yOffset, int innerRadius);
 	void DrawHorizontalSpan(int xStart, int xEnd, int y, const Color &color);
+	void InitTable(std::vector<Cell>& table, int minY, int maxY);
+	void ScanLineDDA(Vector2 v0, Vector2 v1, std::vector<Cell>& table);
+	void FillTriangleRows(const std::vector<Cell>& table, int minY, int maxY, const Color& fillColor);
 
 public:
 	unsigned int width;
@@ -89,7 +99,7 @@ public:
 			pixels[pos] = c;
 	}
 
-	// Returns a new image with the area from (startx,starty) of size width,height
+	// Returns a new image with the area from (startX,startY) of size width,height
 	Image GetArea(unsigned int start_x, unsigned int start_y, unsigned int width, unsigned int height);
 
 	// Save or load images from the hard drive
@@ -103,17 +113,18 @@ public:
 	void DrawLineBresenham(Vector2 v0, Vector2 v1, const Color &c);
 	void DrawLine(int x0, int y0, int x1, int y1, const Color &c);
 	void DrawLine(Vector2 v0, Vector2 v1, const Color &c);
-	void DrawRectangle(int x, int y, int w, int h, const Color &borderColor, int borderWidth, bool isFilled, const Color &fillColor);
-	void DrawRectangle(Vector2 v, int w, int h, const Color &borderColor, int borderWidth, bool isFilled, const Color &fillColor);
-	void DrawCircle(int x, int y, int r, const Color &borderColor, int borderWidth, bool isFilled, const Color &fillColor);
-	void DrawCircle(Vector2 center, int r, const Color &borderColor, int borderWidth, bool isFilled, const Color &fillColor);
+	void DrawRectangle(int x, int y, int w, int h, const Color &borderColor, int borderWidth, bool isFilled=false, const Color &fillColor=Color::WHITE);
+	void DrawRectangle(Vector2 v, int w, int h, const Color &borderColor, int borderWidth, bool isFilled=false, const Color &fillColor=Color::WHITE);
+	void DrawCircle(int x, int y, int r, const Color &borderColor, int borderWidth, bool isFilled=false, const Color &fillColor=Color::WHITE);
+	void DrawCircle(Vector2 center, int r, const Color &borderColor, int borderWidth, bool isFilled=false, const Color &fillColor=Color::WHITE);
+	void DrawTriangle(const Vector2& p0, const Vector2& p1, const Vector2& p2, const Color& borderColor, bool isFilled=false, const Color& fillColor=Color::WHITE);
 
 // Used to easy code
 #ifndef IGNORE_LAMBDAS
 
 	// Applies an algorithm to every pixel in an image
-	// you can use lambda sintax:   img.forEachPixel( [](Color c) { return c*2; });
-	// or callback sintax:   img.forEachPixel( mycallback ); //the callback has to be Color mycallback(Color c) { ... }
+	// you can use lambda syntax:   img.forEachPixel( [](Color c) { return c*2; });
+	// or callback syntax:   img.forEachPixel( mycallback ); //the callback has to be Color mycallback(Color c) { ... }
 	template <typename F>
 	Image &ForEachPixel(F callback)
 	{
