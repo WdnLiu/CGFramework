@@ -405,9 +405,7 @@ void FloatImage::Resize(unsigned int width, unsigned int height)
 }
 
 void Image::DrawLineDDA(int x0, int y0, int x1, int y1, const Color& c) {
-	Vector2 v0(x0, y0), v1(x1, y1);
-
-	DrawLineDDA(v0, v1, c);
+	DrawLineDDA(Vector2(x0, y0), Vector2(x1, y1), c);
 }
 
 void Image::DrawLineDDA(Vector2 v0, Vector2 v1, const Color& c) {
@@ -425,9 +423,7 @@ void Image::DrawLineDDA(Vector2 v0, Vector2 v1, const Color& c) {
 }
 
 void Image::DrawLineBresenham(int x0, int y0, int x1, int y1, const Color& c) {
-	Vector2 v0(x0, y0), v1(x1, y1);
-
-	DrawLineBresenham(v0, v1, c);
+	DrawLineBresenham(Vector2(x0, y0), Vector2(x1, y1), c);
 }
 
 void Image::DrawLineBresenham(Vector2 v0, Vector2 v1, const Color& c) {
@@ -458,4 +454,37 @@ void Image::DrawLineBresenham(Vector2 v0, Vector2 v1, const Color& c) {
 			v0.y += direction.y;
 		}
 	}
+}
+
+void Image::DrawLine(int x0, int y0, int x1, int y1, const Color& c) {
+	DrawLine(Vector2(x0, y0), Vector2(x1, y1), c);
+}
+
+void Image::DrawLine(Vector2 v0, Vector2 v1, const Color& c) {
+	DrawLineBresenham(v0, v1, c);
+}
+
+void Image::DrawRectangle(int x, int y, int w, int h, const Color& borderColor, int borderWidth=1, bool isFilled=false, const Color& fillColor=Color::WHITE) {
+	DrawRectangle(Vector2(x, y), w, h, borderColor, borderWidth, isFilled, fillColor);
+}
+
+void Image::DrawRectangle(Vector2 v, int w, int h, const Color& borderColor, int borderWidth=1, bool isFilled=false, const Color& fillColor=Color::WHITE) {
+	if (isFilled) {
+        for (int i = borderWidth; i < h - borderWidth; ++i) {
+            Vector2 start(v.x + borderWidth, v.y + i);
+            Vector2 end(v.x + w - borderWidth - 1, v.y + i);
+            DrawLineBresenham(start, end, fillColor);
+        }
+    }
+
+	for (int t = 0; t < borderWidth; ++t) {
+        // Top
+        DrawLine(Vector2(v.x, v.y + t), Vector2(v.x + w - 1, v.y + t), borderColor);
+        // Bottom
+        DrawLine(Vector2(v.x, v.y + h - 1 - t), Vector2(v.x + w - 1, v.y + h - 1 - t), borderColor);
+        // Left
+        DrawLine(Vector2(v.x + t, v.y), Vector2(v.x + t, v.y + h - 1), borderColor);
+        // Right
+        DrawLine(Vector2(v.x + w - 1 - t, v.y), Vector2(v.x + w - 1 - t, v.y + h - 1), borderColor);
+    }
 }
