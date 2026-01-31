@@ -79,6 +79,10 @@ public:
 	bool SaveTGA(const char* filename);
 
 	void DrawLineDDA(int x0, int y0, int x1, int y1, const Color& c);
+	void DrawLineDDA(Vector2 v0, Vector2 v1, const Color& c);
+	void DrawLineBresenham(int x0, int y0, int x1, int y1, const Color& c);
+	void DrawLineBresenham(Vector2 v0, Vector2 v1, const Color& c);
+	void DrawRectangle(int x, int y, int w, int h, const Color& borderColor, int borderWidth, bool isFilled, const Color& fillColor);
 
 	// Used to easy code
 	#ifndef IGNORE_LAMBDAS

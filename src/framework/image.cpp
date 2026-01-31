@@ -405,11 +405,14 @@ void FloatImage::Resize(unsigned int width, unsigned int height)
 }
 
 void Image::DrawLineDDA(int x0, int y0, int x1, int y1, const Color& c) {
-	float dx = (x0-x1);
-	float dy = (y0-y1);
+	Vector2 v0(x0, y0), v1(x1, y1);
 
-	Vector2 v0(x0, x1);
-	Vector2 v1(x1, y1);
+	DrawLineDDA(v0, v1, c);
+}
+
+void Image::DrawLineDDA(Vector2 v0, Vector2 v1, const Color& c) {
+	float dx = (v0.x-v1.x);
+	float dy = (v0.y-v1.y);
 
 	float d = std::max(std::abs(dx), std::abs(dy));
 	Vector2 step(dx/d, dy/d);
@@ -418,5 +421,41 @@ void Image::DrawLineDDA(int x0, int y0, int x1, int y1, const Color& c) {
 		this->SetPixel(std::floor(v0.x), std::floor(v0.y), c);
 
 		v0 += step;
+	}
+}
+
+void Image::DrawLineBresenham(int x0, int y0, int x1, int y1, const Color& c) {
+	Vector2 v0(x0, y0), v1(x1, y1);
+
+	DrawLineBresenham(v0, v1, c);
+}
+
+void Image::DrawLineBresenham(Vector2 v0, Vector2 v1, const Color& c) {
+	int dx = std::abs(v0.x - v1.x);
+	int dy = -std::abs(v0.y - v1.y);
+
+	Vector2 direction;
+	direction.x = (v0.x < v1.x) ? 1 : -1;
+	direction.y = (v0.y < v1.y) ? 1 : -1;
+
+	int error = dx+dy;
+
+	while (true) {
+		this->SetPixel(v0.x, v0.y, c);
+
+		if (v0.x == v1.x && v0.y == v1.y)
+			break;
+
+		int e = 2*error;
+
+		if (e >= dy) {
+			error += dy;
+			v0.x += direction.x;
+		}
+
+		if (e <= dx) {
+			error += dx;
+			v0.y += direction.y;
+		}
 	}
 }
