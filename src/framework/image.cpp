@@ -403,3 +403,20 @@ void FloatImage::Resize(unsigned int width, unsigned int height)
 	this->height = height;
 	pixels = new_pixels;
 }
+
+void Image::DrawLineDDA(int x0, int y0, int x1, int y1, const Color& c) {
+	float dx = (x0-x1);
+	float dy = (y0-y1);
+
+	Vector2 v0(x0, x1);
+	Vector2 v1(x1, y1);
+
+	float d = std::max(std::abs(dx), std::abs(dy));
+	Vector2 step(dx/d, dy/d);
+
+	for (int i = 0; i < d; ++i) {
+		this->SetPixel(std::floor(v0.x), std::floor(v0.y), c);
+
+		v0 += step;
+	}
+}
