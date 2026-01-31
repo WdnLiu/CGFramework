@@ -9,8 +9,10 @@
 #include "camera.h"
 #include "mesh.h"
 
-Image::Image() {
-	width = 0; height = 0;
+Image::Image()
+{
+	width = 0;
+	height = 0;
 	pixels = NULL;
 }
 
@@ -18,45 +20,46 @@ Image::Image(unsigned int width, unsigned int height)
 {
 	this->width = width;
 	this->height = height;
-	pixels = new Color[width*height];
+	pixels = new Color[width * height];
 	memset(pixels, 0, width * height * sizeof(Color));
 }
 
 // Copy constructor
-Image::Image(const Image& c)
+Image::Image(const Image &c)
 {
 	pixels = NULL;
 	width = c.width;
 	height = c.height;
 	bytes_per_pixel = c.bytes_per_pixel;
-	if(c.pixels)
+	if (c.pixels)
 	{
-		pixels = new Color[width*height];
-		memcpy(pixels, c.pixels, width*height*bytes_per_pixel);
+		pixels = new Color[width * height];
+		memcpy(pixels, c.pixels, width * height * bytes_per_pixel);
 	}
 }
 
 // Assign operator
-Image& Image::operator = (const Image& c)
+Image &Image::operator=(const Image &c)
 {
-	if(pixels) delete[] pixels;
+	if (pixels)
+		delete[] pixels;
 	pixels = NULL;
 
 	width = c.width;
 	height = c.height;
 	bytes_per_pixel = c.bytes_per_pixel;
 
-	if(c.pixels)
+	if (c.pixels)
 	{
-		pixels = new Color[width*height*bytes_per_pixel];
-		memcpy(pixels, c.pixels, width*height*bytes_per_pixel);
+		pixels = new Color[width * height * bytes_per_pixel];
+		memcpy(pixels, c.pixels, width * height * bytes_per_pixel);
 	}
 	return *this;
 }
 
 Image::~Image()
 {
-	if(pixels) 
+	if (pixels)
 		delete[] pixels;
 }
 
@@ -69,13 +72,13 @@ void Image::Render()
 // Change image size (the old one will remain in the top-left corner)
 void Image::Resize(unsigned int width, unsigned int height)
 {
-	Color* new_pixels = new Color[width*height];
+	Color *new_pixels = new Color[width * height];
 	unsigned int min_width = this->width > width ? width : this->width;
 	unsigned int min_height = this->height > height ? height : this->height;
 
-	for(unsigned int x = 0; x < min_width; ++x)
-		for(unsigned int y = 0; y < min_height; ++y)
-			new_pixels[ y * width + x ] = GetPixel(x,y);
+	for (unsigned int x = 0; x < min_width; ++x)
+		for (unsigned int y = 0; y < min_height; ++y)
+			new_pixels[y * width + x] = GetPixel(x, y);
 
 	delete[] pixels;
 	this->width = width;
@@ -86,11 +89,11 @@ void Image::Resize(unsigned int width, unsigned int height)
 // Change image size and scale the content
 void Image::Scale(unsigned int width, unsigned int height)
 {
-	Color* new_pixels = new Color[width*height];
+	Color *new_pixels = new Color[width * height];
 
-	for(unsigned int x = 0; x < width; ++x)
-		for(unsigned int y = 0; y < height; ++y)
-			new_pixels[ y * width + x ] = GetPixel((unsigned int)(this->width * (x / (float)width)), (unsigned int)(this->height * (y / (float)height)) );
+	for (unsigned int x = 0; x < width; ++x)
+		for (unsigned int y = 0; y < height; ++y)
+			new_pixels[y * width + x] = GetPixel((unsigned int)(this->width * (x / (float)width)), (unsigned int)(this->height * (y / (float)height)));
 
 	delete[] pixels;
 	this->width = width;
@@ -101,11 +104,11 @@ void Image::Scale(unsigned int width, unsigned int height)
 Image Image::GetArea(unsigned int start_x, unsigned int start_y, unsigned int width, unsigned int height)
 {
 	Image result(width, height);
-	for(unsigned int x = 0; x < width; ++x)
-		for(unsigned int y = 0; y < height; ++y)
+	for (unsigned int x = 0; x < width; ++x)
+		for (unsigned int y = 0; y < height; ++y)
 		{
-			if( (x + start_x) < this->width && (y + start_y) < this->height) 
-				result.SetPixelUnsafe( x, y, GetPixel(x + start_x,y + start_y) );
+			if ((x + start_x) < this->width && (y + start_y) < this->height)
+				result.SetPixelUnsafe(x, y, GetPixel(x + start_x, y + start_y));
 		}
 	return result;
 }
@@ -113,30 +116,33 @@ Image Image::GetArea(unsigned int start_x, unsigned int start_y, unsigned int wi
 void Image::FlipY()
 {
 	int row_size = bytes_per_pixel * width;
-	Uint8* temp_row = new Uint8[row_size];
+	Uint8 *temp_row = new Uint8[row_size];
 #pragma omp simd
 	for (int y = 0; y < height * 0.5; y += 1)
 	{
-		Uint8* pos = (Uint8*)pixels + y * row_size;
+		Uint8 *pos = (Uint8 *)pixels + y * row_size;
 		memcpy(temp_row, pos, row_size);
-		Uint8* pos2 = (Uint8*)pixels + (height - y - 1) * row_size;
+		Uint8 *pos2 = (Uint8 *)pixels + (height - y - 1) * row_size;
 		memcpy(pos, pos2, row_size);
 		memcpy(pos2, temp_row, row_size);
 	}
 	delete[] temp_row;
 }
 
-bool Image::LoadPNG(const char* filename, bool flip_y)
+bool Image::LoadPNG(const char *filename, bool flip_y)
 {
 	std::string sfullPath = absResPath(filename);
 	std::ifstream file(sfullPath, std::ios::in | std::ios::binary | std::ios::ate);
 
 	// Get filesize
 	std::streamsize size = 0;
-	if (file.seekg(0, std::ios::end).good()) size = file.tellg();
-	if (file.seekg(0, std::ios::beg).good()) size -= file.tellg();
+	if (file.seekg(0, std::ios::end).good())
+		size = file.tellg();
+	if (file.seekg(0, std::ios::beg).good())
+		size -= file.tellg();
 
-	if (!size){
+	if (!size)
+	{
 		std::cerr << "--- Failed to load file: " << sfullPath.c_str() << std::endl;
 		return false;
 	}
@@ -147,37 +153,43 @@ bool Image::LoadPNG(const char* filename, bool flip_y)
 	if (size > 0)
 	{
 		buffer.resize((size_t)size);
-		file.read((char*)(&buffer[0]), size);
+		file.read((char *)(&buffer[0]), size);
 	}
 	else
 		buffer.clear();
 
 	std::vector<unsigned char> out_image;
 
-	if (decodePNG(out_image, width, height, buffer.empty() ? 0 : &buffer[0], (unsigned long)buffer.size(), true) != 0){
+	if (decodePNG(out_image, width, height, buffer.empty() ? 0 : &buffer[0], (unsigned long)buffer.size(), true) != 0)
+	{
 		std::cerr << "--- Failed to load file: " << sfullPath.c_str() << std::endl;
 		return false;
 	}
 
 	size_t bufferSize = out_image.size();
 	unsigned int originalBytesPerPixel = (unsigned int)bufferSize / (width * height);
-	
+
 	// Force 3 channels
 	bytes_per_pixel = 3;
 
-	if (originalBytesPerPixel == 3) {
-		if (pixels) delete[] pixels;
+	if (originalBytesPerPixel == 3)
+	{
+		if (pixels)
+			delete[] pixels;
 		pixels = new Color[bufferSize];
 		memcpy(pixels, &out_image[0], bufferSize);
 	}
-	else if (originalBytesPerPixel == 4) {
-		if (pixels) delete[] pixels;
+	else if (originalBytesPerPixel == 4)
+	{
+		if (pixels)
+			delete[] pixels;
 
 		unsigned int newBufferSize = width * height * bytes_per_pixel;
 		pixels = new Color[newBufferSize];
 
 		unsigned int k = 0;
-		for (unsigned int i = 0; i < bufferSize; i += originalBytesPerPixel) {
+		for (unsigned int i = 0; i < bufferSize; i += originalBytesPerPixel)
+		{
 			pixels[k] = Color(out_image[i], out_image[i + 1], out_image[i + 2]);
 			k++;
 		}
@@ -193,7 +205,7 @@ bool Image::LoadPNG(const char* filename, bool flip_y)
 }
 
 // Loads an image from a TGA file
-bool Image::LoadTGA(const char* filename, bool flip_y)
+bool Image::LoadTGA(const char *filename, bool flip_y)
 {
 	unsigned char TGAheader[12] = {0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 	unsigned char TGAcompare[12];
@@ -201,10 +213,10 @@ bool Image::LoadTGA(const char* filename, bool flip_y)
 	unsigned int imageSize;
 	unsigned int bytesPerPixel;
 
-    std::string sfullPath = absResPath( filename );
+	std::string sfullPath = absResPath(filename);
 
-	FILE * file = fopen( sfullPath.c_str(), "rb");
-   	if ( file == NULL || fread(TGAcompare, 1, sizeof(TGAcompare), file) != sizeof(TGAcompare) ||
+	FILE *file = fopen(sfullPath.c_str(), "rb");
+	if (file == NULL || fread(TGAcompare, 1, sizeof(TGAcompare), file) != sizeof(TGAcompare) ||
 		memcmp(TGAheader, TGAcompare, sizeof(TGAheader)) != 0 ||
 		fread(header, 1, sizeof(header), file) != sizeof(header))
 	{
@@ -218,11 +230,11 @@ bool Image::LoadTGA(const char* filename, bool flip_y)
 		}
 	}
 
-	TGAInfo* tgainfo = new TGAInfo;
-    
+	TGAInfo *tgainfo = new TGAInfo;
+
 	tgainfo->width = header[1] * 256 + header[0];
 	tgainfo->height = header[3] * 256 + header[2];
-    
+
 	if (tgainfo->width <= 0 || tgainfo->height <= 0 || (header[4] != 24 && header[4] != 32))
 	{
 		std::cerr << "--- Failed to load file: " << sfullPath.c_str() << std::endl;
@@ -230,20 +242,20 @@ bool Image::LoadTGA(const char* filename, bool flip_y)
 		delete tgainfo;
 		return NULL;
 	}
-    
+
 	tgainfo->bpp = header[4];
 	bytesPerPixel = tgainfo->bpp / 8;
 	imageSize = tgainfo->width * tgainfo->height * bytesPerPixel;
-    
+
 	tgainfo->data = new unsigned char[imageSize];
-    
+
 	if (tgainfo->data == NULL || fread(tgainfo->data, 1, imageSize, file) != imageSize)
 	{
 		std::cerr << "--- Failed to load file: " << sfullPath.c_str() << std::endl;
 
 		if (tgainfo->data != NULL)
 			delete[] tgainfo->data;
-            
+
 		fclose(file);
 		delete tgainfo;
 		return false;
@@ -252,29 +264,32 @@ bool Image::LoadTGA(const char* filename, bool flip_y)
 	fclose(file);
 
 	// Save info in image
-	if(pixels)
+	if (pixels)
 		delete[] pixels;
 
 	width = tgainfo->width;
 	height = tgainfo->height;
-	pixels = new Color[width*height];
+	pixels = new Color[width * height];
 
 	const char imageDescriptor = header[5];
 	bool tgaFlipY = (imageDescriptor & 0x20) > 0; // bit 5 (0-7) -> true == origin on top
 	bool tgaFlipX = (imageDescriptor & 0x10) > 0; // bit 4 (0-7) -> true == origin on right
 
-	if (flip_y) {
+	if (flip_y)
+	{
 		tgaFlipY = !tgaFlipY;
 	}
 
 	// Convert to float all pixels
-	for (unsigned int y = 0; y < height; ++y) {
-		for (unsigned int x = 0; x < width; ++x) {
+	for (unsigned int y = 0; y < height; ++y)
+	{
+		for (unsigned int x = 0; x < width; ++x)
+		{
 			unsigned int offsetY = (tgaFlipY ? (height - 1 - y) : y) * width * bytesPerPixel;
 			unsigned int offsetX = (tgaFlipX ? (width - 1 - x) : x) * bytesPerPixel;
 			unsigned int pos = offsetY + offsetX;
 			// Make sure we don't access out of memory
-			if( pos + 2 < imageSize ) // assuming 1 bytes per channel
+			if (pos + 2 < imageSize) // assuming 1 bytes per channel
 				SetPixelUnsafe(x, y, Color(tgainfo->data[pos + 2], tgainfo->data[pos + 1], tgainfo->data[pos]));
 		}
 	}
@@ -288,13 +303,13 @@ bool Image::LoadTGA(const char* filename, bool flip_y)
 }
 
 // Saves the image to a TGA file
-bool Image::SaveTGA(const char* filename)
+bool Image::SaveTGA(const char *filename)
 {
 	unsigned char TGAheader[12] = {0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 	std::string fullPath = absResPath(filename);
 	FILE *file = fopen(fullPath.c_str(), "wb");
-	if ( file == NULL )
+	if (file == NULL)
 	{
 		std::cerr << "--- Failed to save file: " << fullPath.c_str() << std::endl;
 		return false;
@@ -303,7 +318,7 @@ bool Image::SaveTGA(const char* filename)
 	unsigned short header_short[3];
 	header_short[0] = width;
 	header_short[1] = height;
-	unsigned char* header = (unsigned char*)header_short;
+	unsigned char *header = (unsigned char *)header_short;
 	header[4] = 24;
 	header[5] = 0; // image descriptor: origin in bottom-left
 
@@ -311,18 +326,18 @@ bool Image::SaveTGA(const char* filename)
 	fwrite(header, 1, 6, file);
 
 	// Convert pixels to unsigned char
-	unsigned char* bytes = new unsigned char[width*height*3];
-	for(unsigned int y = 0; y < height; ++y)
-		for(unsigned int x = 0; x < width; ++x)
+	unsigned char *bytes = new unsigned char[width * height * 3];
+	for (unsigned int y = 0; y < height; ++y)
+		for (unsigned int x = 0; x < width; ++x)
 		{
-			Color c = pixels[y*width+x];
-			unsigned int pos = (y*width+x)*3;
-			bytes[pos+2] = c.r;
-			bytes[pos+1] = c.g;
+			Color c = pixels[y * width + x];
+			unsigned int pos = (y * width + x) * 3;
+			bytes[pos + 2] = c.r;
+			bytes[pos + 1] = c.g;
 			bytes[pos] = c.b;
 		}
 
-	fwrite(bytes, 1, width*height*3, file);
+	fwrite(bytes, 1, width * height * 3, file);
 	fclose(file);
 
 	delete[] bytes;
@@ -337,9 +352,10 @@ bool Image::SaveTGA(const char* filename)
 // You can apply and algorithm for two images and store the result in the first one
 // ForEachPixel( img, img2, [](Color a, Color b) { return a + b; } );
 template <typename F>
-void ForEachPixel(Image& img, const Image& img2, F f) {
-	for(unsigned int pos = 0; pos < img.width * img.height; ++pos)
-		img.pixels[pos] = f( img.pixels[pos], img2.pixels[pos] );
+void ForEachPixel(Image &img, const Image &img2, F f)
+{
+	for (unsigned int pos = 0; pos < img.width * img.height; ++pos)
+		img.pixels[pos] = f(img.pixels[pos], img2.pixels[pos]);
 }
 
 #endif
@@ -353,7 +369,8 @@ FloatImage::FloatImage(unsigned int width, unsigned int height)
 }
 
 // Copy constructor
-FloatImage::FloatImage(const FloatImage& c) {
+FloatImage::FloatImage(const FloatImage &c)
+{
 	pixels = NULL;
 
 	width = c.width;
@@ -366,9 +383,10 @@ FloatImage::FloatImage(const FloatImage& c) {
 }
 
 // Assign operator
-FloatImage& FloatImage::operator = (const FloatImage& c)
+FloatImage &FloatImage::operator=(const FloatImage &c)
 {
-	if (pixels) delete[] pixels;
+	if (pixels)
+		delete[] pixels;
 	pixels = NULL;
 
 	width = c.width;
@@ -390,7 +408,7 @@ FloatImage::~FloatImage()
 // Change image size (the old one will remain in the top-left corner)
 void FloatImage::Resize(unsigned int width, unsigned int height)
 {
-	float* new_pixels = new float[width * height];
+	float *new_pixels = new float[width * height];
 	unsigned int min_width = this->width > width ? width : this->width;
 	unsigned int min_height = this->height > height ? height : this->height;
 
@@ -404,29 +422,34 @@ void FloatImage::Resize(unsigned int width, unsigned int height)
 	pixels = new_pixels;
 }
 
-void Image::DrawLineDDA(int x0, int y0, int x1, int y1, const Color& c) {
+void Image::DrawLineDDA(int x0, int y0, int x1, int y1, const Color &c)
+{
 	DrawLineDDA(Vector2(x0, y0), Vector2(x1, y1), c);
 }
 
-void Image::DrawLineDDA(Vector2 v0, Vector2 v1, const Color& c) {
-	float dx = (v0.x-v1.x);
-	float dy = (v0.y-v1.y);
+void Image::DrawLineDDA(Vector2 v0, Vector2 v1, const Color &c)
+{
+	float dx = (v0.x - v1.x);
+	float dy = (v0.y - v1.y);
 
 	float d = std::max(std::abs(dx), std::abs(dy));
-	Vector2 step(dx/d, dy/d);
+	Vector2 step(dx / d, dy / d);
 
-	for (int i = 0; i < d; ++i) {
+	for (int i = 0; i < d; ++i)
+	{
 		this->SetPixel(std::floor(v0.x), std::floor(v0.y), c);
 
 		v0 += step;
 	}
 }
 
-void Image::DrawLineBresenham(int x0, int y0, int x1, int y1, const Color& c) {
+void Image::DrawLineBresenham(int x0, int y0, int x1, int y1, const Color &c)
+{
 	DrawLineBresenham(Vector2(x0, y0), Vector2(x1, y1), c);
 }
 
-void Image::DrawLineBresenham(Vector2 v0, Vector2 v1, const Color& c) {
+void Image::DrawLineBresenham(Vector2 v0, Vector2 v1, const Color &c)
+{
 	int dx = std::abs(v0.x - v1.x);
 	int dy = -std::abs(v0.y - v1.y);
 
@@ -434,57 +457,129 @@ void Image::DrawLineBresenham(Vector2 v0, Vector2 v1, const Color& c) {
 	direction.x = (v0.x < v1.x) ? 1 : -1;
 	direction.y = (v0.y < v1.y) ? 1 : -1;
 
-	int error = dx+dy;
+	int error = dx + dy;
 
-	while (true) {
+	while (true)
+	{
 		this->SetPixel(v0.x, v0.y, c);
 
 		if (v0.x == v1.x && v0.y == v1.y)
 			break;
 
-		int e = 2*error;
+		int e = 2 * error;
 
-		if (e >= dy) {
+		if (e >= dy)
+		{
 			error += dy;
 			v0.x += direction.x;
 		}
 
-		if (e <= dx) {
+		if (e <= dx)
+		{
 			error += dx;
 			v0.y += direction.y;
 		}
 	}
 }
 
-void Image::DrawLine(int x0, int y0, int x1, int y1, const Color& c) {
+void Image::DrawLine(int x0, int y0, int x1, int y1, const Color &c)
+{
 	DrawLine(Vector2(x0, y0), Vector2(x1, y1), c);
 }
 
-void Image::DrawLine(Vector2 v0, Vector2 v1, const Color& c) {
+void Image::DrawLine(Vector2 v0, Vector2 v1, const Color &c)
+{
 	DrawLineBresenham(v0, v1, c);
 }
 
-void Image::DrawRectangle(int x, int y, int w, int h, const Color& borderColor, int borderWidth=1, bool isFilled=false, const Color& fillColor=Color::WHITE) {
+void Image::DrawRectangle(int x, int y, int w, int h, const Color &borderColor, int borderWidth = 1, bool isFilled = false, const Color &fillColor = Color::WHITE)
+{
 	DrawRectangle(Vector2(x, y), w, h, borderColor, borderWidth, isFilled, fillColor);
 }
 
-void Image::DrawRectangle(Vector2 v, int w, int h, const Color& borderColor, int borderWidth=1, bool isFilled=false, const Color& fillColor=Color::WHITE) {
-	if (isFilled) {
-        for (int i = borderWidth; i < h - borderWidth; ++i) {
-            Vector2 start(v.x + borderWidth, v.y + i);
-            Vector2 end(v.x + w - borderWidth - 1, v.y + i);
-            DrawLineBresenham(start, end, fillColor);
-        }
-    }
+void Image::DrawRectangle(Vector2 v, int w, int h, const Color &borderColor, int borderWidth = 1, bool isFilled = false, const Color &fillColor = Color::WHITE)
+{
+	if (isFilled)
+	{
+		for (int i = borderWidth; i < h - borderWidth; ++i)
+		{
+			Vector2 start(v.x + borderWidth, v.y + i);
+			Vector2 end(v.x + w - borderWidth - 1, v.y + i);
+			DrawLineBresenham(start, end, fillColor);
+		}
+	}
 
-	for (int t = 0; t < borderWidth; ++t) {
-        // Top
-        DrawLine(Vector2(v.x, v.y + t), Vector2(v.x + w - 1, v.y + t), borderColor);
-        // Bottom
-        DrawLine(Vector2(v.x, v.y + h - 1 - t), Vector2(v.x + w - 1, v.y + h - 1 - t), borderColor);
-        // Left
-        DrawLine(Vector2(v.x + t, v.y), Vector2(v.x + t, v.y + h - 1), borderColor);
-        // Right
-        DrawLine(Vector2(v.x + w - 1 - t, v.y), Vector2(v.x + w - 1 - t, v.y + h - 1), borderColor);
+	for (int t = 0; t < borderWidth; ++t)
+	{
+		// Top
+		DrawLine(Vector2(v.x, v.y + t), Vector2(v.x + w - 1, v.y + t), borderColor);
+		// Bottom
+		DrawLine(Vector2(v.x, v.y + h - 1 - t), Vector2(v.x + w - 1, v.y + h - 1 - t), borderColor);
+		// Left
+		DrawLine(Vector2(v.x + t, v.y), Vector2(v.x + t, v.y + h - 1), borderColor);
+		// Right
+		DrawLine(Vector2(v.x + w - 1 - t, v.y), Vector2(v.x + w - 1 - t, v.y + h - 1), borderColor);
+	}
+}
+
+void Image::DrawCircle(int x, int y, int radius, const Color& borderColor, int borderWidth, bool isFilled, const Color& fillColor) {
+    DrawCircle(Vector2(x, y), radius, borderColor, borderWidth, isFilled, fillColor);
+}
+
+void Image::DrawCircle(Vector2 center, int radius, const Color& borderColor, int borderWidth, bool isFilled, const Color& fillColor) {
+    int x = 0;
+    int y = radius;
+    int decision = 3 - 2 * radius;
+
+    while (y >= x) {
+        RenderSymmetricCircleLines(center, x, y, radius, borderWidth, isFilled, fillColor, borderColor);
+
+        if (decision > 0) {
+            // Decision formula: D = D + 4(x - y) + 10
+            decision += 4 * (x - y) + 10;
+            y--;
+        } else {
+            // Decision formula: D = D + 4x + 6
+            decision += 4 * x + 6;
+        }
+        x++;
+    }
+}
+
+void Image::RenderSymmetricCircleLines(Vector2 center, int x, int y, int radius, int borderWidth, bool isFilled, const Color& fillColor, const Color& borderColor) {
+    DrawCircleRow(center, y, x, radius, borderWidth, isFilled, fillColor, borderColor);
+    DrawCircleRow(center, -y, x, radius, borderWidth, isFilled, fillColor, borderColor);
+    DrawCircleRow(center, x, y, radius, borderWidth, isFilled, fillColor, borderColor);
+    DrawCircleRow(center, -x, y, radius, borderWidth, isFilled, fillColor, borderColor);
+}
+
+void Image::DrawCircleRow(Vector2 center, int yOffset, int xOuter, int radius, int borderWidth, bool isFilled, const Color& fillColor, const Color& borderColor) {
+    int yCoordinate = center.y + yOffset;
+    int xInner = CalculateInnerX(yOffset, radius - borderWidth);
+
+    DrawHorizontalSpan(center.x + xInner, center.x + xOuter, yCoordinate, borderColor);
+    DrawHorizontalSpan(center.x - xOuter, center.x - xInner, yCoordinate, borderColor);
+
+    if (isFilled && xInner > 0) {
+        DrawHorizontalSpan(center.x - xInner + 1, center.x + xInner - 1, yCoordinate, fillColor);
+    }
+}
+
+int Image::CalculateInnerX(int yOffset, int innerRadius) {
+    if (innerRadius <= 0) return 0;
+
+    // Based on Pythagorean theorem: x^2 + y^2 = r^2 -> x = sqrt(r^2 - y^2)
+    int ySquared = yOffset * yOffset;
+    int rSquared = innerRadius * innerRadius;
+
+    if (ySquared >= rSquared) return 0;
+    return static_cast<int>(std::sqrt(rSquared - ySquared));
+}
+
+void Image::DrawHorizontalSpan(int xStart, int xEnd, int y, const Color& color) {
+    if (xStart > xEnd) std::swap(xStart, xEnd);
+    
+    for (int x = xStart; x <= xEnd; ++x) {
+        this->SetPixel(x, y, color);
     }
 }

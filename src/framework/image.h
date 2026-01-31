@@ -10,10 +10,10 @@
 #include <iostream>
 #include "framework.h"
 
-//remove unsafe warnings
+// remove unsafe warnings
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
-#pragma warning(disable:4996)
+#pragma warning(disable : 4996)
 #endif
 
 class FloatImage;
@@ -24,25 +24,32 @@ class Camera;
 class Image
 {
 	// A general struct to store all the information about a TGA file
-	typedef struct sTGAInfo {
+	typedef struct sTGAInfo
+	{
 		unsigned int width;
 		unsigned int height;
-		unsigned int bpp; // Bits per pixel
-		unsigned char* data; // Bytes with the pixel information
+		unsigned int bpp;	 // Bits per pixel
+		unsigned char *data; // Bytes with the pixel information
 	} TGAInfo;
+
+private:
+	void RenderSymmetricCircleLines(Vector2 center, int x, int y, int radius, int borderWidth, bool isFilled, const Color &fillColor, const Color &borderColor);
+	void DrawCircleRow(Vector2 center, int yOffset, int xOuter, int radius, int borderWidth, bool isFilled, const Color &fillColor, const Color &borderColor);
+	int CalculateInnerX(int yOffset, int innerRadius);
+	void DrawHorizontalSpan(int xStart, int xEnd, int y, const Color &color);
 
 public:
 	unsigned int width;
 	unsigned int height;
 	unsigned int bytes_per_pixel = 3; // Bits per pixel
 
-	Color* pixels;
+	Color *pixels;
 
 	// Constructors
 	Image();
 	Image(unsigned int width, unsigned int height);
-	Image(const Image& c);
-	Image& operator = (const Image& c); // Assign operator
+	Image(const Image &c);
+	Image &operator=(const Image &c); // Assign operator
 
 	// Destructor
 	~Image();
@@ -50,57 +57,71 @@ public:
 	void Render();
 
 	// Get the pixel at position x,y
-	Color GetPixel(unsigned int x, unsigned int y) const { return pixels[ y * width + x ]; }
-	Color& GetPixelRef(unsigned int x, unsigned int y)	{ return pixels[ y * width + x ]; }
-	Color GetPixelSafe(unsigned int x, unsigned int y) const {	
-		x = clamp((unsigned int)x, 0, width-1); 
-		y = clamp((unsigned int)y, 0, height-1); 
-		return pixels[ y * width + x ]; 
+	Color GetPixel(unsigned int x, unsigned int y) const { return pixels[y * width + x]; }
+	Color &GetPixelRef(unsigned int x, unsigned int y) { return pixels[y * width + x]; }
+	Color GetPixelSafe(unsigned int x, unsigned int y) const
+	{
+		x = clamp((unsigned int)x, 0, width - 1);
+		y = clamp((unsigned int)y, 0, height - 1);
+		return pixels[y * width + x];
 	}
 
 	// Set the pixel at position x,y with value C
-	void SetPixel(unsigned int x, unsigned int y, const Color& c) { if(x < 0 || x > width-1) return; if(y < 0 || y > height-1) return; pixels[ y * width + x ] = c; }
-	inline void SetPixelUnsafe(unsigned int x, unsigned int y, const Color& c) { pixels[ y * width + x ] = c; }
+	void SetPixel(unsigned int x, unsigned int y, const Color &c)
+	{
+		if (x < 0 || x > width - 1)
+			return;
+		if (y < 0 || y > height - 1)
+			return;
+		pixels[y * width + x] = c;
+	}
+	inline void SetPixelUnsafe(unsigned int x, unsigned int y, const Color &c) { pixels[y * width + x] = c; }
 
 	void Resize(unsigned int width, unsigned int height);
 	void Scale(unsigned int width, unsigned int height);
-	
+
 	void FlipY(); // Flip the image top-down
 
 	// Fill the image with the color C
-	void Fill(const Color& c) { for(unsigned int pos = 0; pos < width*height; ++pos) pixels[pos] = c; }
+	void Fill(const Color &c)
+	{
+		for (unsigned int pos = 0; pos < width * height; ++pos)
+			pixels[pos] = c;
+	}
 
 	// Returns a new image with the area from (startx,starty) of size width,height
 	Image GetArea(unsigned int start_x, unsigned int start_y, unsigned int width, unsigned int height);
 
 	// Save or load images from the hard drive
-	bool LoadPNG(const char* filename, bool flip_y = true);
-	bool LoadTGA(const char* filename, bool flip_y = false);
-	bool SaveTGA(const char* filename);
+	bool LoadPNG(const char *filename, bool flip_y = true);
+	bool LoadTGA(const char *filename, bool flip_y = false);
+	bool SaveTGA(const char *filename);
 
-	void DrawLineDDA(int x0, int y0, int x1, int y1, const Color& c);
-	void DrawLineDDA(Vector2 v0, Vector2 v1, const Color& c);
-	void DrawLineBresenham(int x0, int y0, int x1, int y1, const Color& c);
-	void DrawLineBresenham(Vector2 v0, Vector2 v1, const Color& c);
-	void DrawLine(int x0, int y0, int x1, int y1, const Color& c);
-	void DrawLine(Vector2 v0, Vector2 v1, const Color& c);
-	void DrawRectangle(int x, int y, int w, int h, const Color& borderColor, int borderWidth, bool isFilled, const Color& fillColor);
-	void DrawRectangle(Vector2 v, int w, int h, const Color& borderColor, int borderWidth, bool isFilled, const Color& fillColor);
+	void DrawLineDDA(int x0, int y0, int x1, int y1, const Color &c);
+	void DrawLineDDA(Vector2 v0, Vector2 v1, const Color &c);
+	void DrawLineBresenham(int x0, int y0, int x1, int y1, const Color &c);
+	void DrawLineBresenham(Vector2 v0, Vector2 v1, const Color &c);
+	void DrawLine(int x0, int y0, int x1, int y1, const Color &c);
+	void DrawLine(Vector2 v0, Vector2 v1, const Color &c);
+	void DrawRectangle(int x, int y, int w, int h, const Color &borderColor, int borderWidth, bool isFilled, const Color &fillColor);
+	void DrawRectangle(Vector2 v, int w, int h, const Color &borderColor, int borderWidth, bool isFilled, const Color &fillColor);
+	void DrawCircle(int x, int y, int r, const Color &borderColor, int borderWidth, bool isFilled, const Color &fillColor);
+	void DrawCircle(Vector2 center, int r, const Color &borderColor, int borderWidth, bool isFilled, const Color &fillColor);
 
-	// Used to easy code
-	#ifndef IGNORE_LAMBDAS
+// Used to easy code
+#ifndef IGNORE_LAMBDAS
 
 	// Applies an algorithm to every pixel in an image
 	// you can use lambda sintax:   img.forEachPixel( [](Color c) { return c*2; });
 	// or callback sintax:   img.forEachPixel( mycallback ); //the callback has to be Color mycallback(Color c) { ... }
 	template <typename F>
-	Image& ForEachPixel( F callback )
+	Image &ForEachPixel(F callback)
 	{
-		for(unsigned int pos = 0; pos < width*height; ++pos)
+		for (unsigned int pos = 0; pos < width * height; ++pos)
 			pixels[pos] = callback(pixels[pos]);
 		return *this;
 	}
-	#endif
+#endif
 };
 
 // Image storing one float per pixel instead of a 3 or 4 component Color
@@ -110,26 +131,41 @@ class FloatImage
 public:
 	unsigned int width;
 	unsigned int height;
-	float* pixels;
+	float *pixels;
 
-	// CONSTRUCTORS 
-	FloatImage() { width = height = 0; pixels = NULL; }
+	// CONSTRUCTORS
+	FloatImage()
+	{
+		width = height = 0;
+		pixels = NULL;
+	}
 	FloatImage(unsigned int width, unsigned int height);
-	FloatImage(const FloatImage& c);
-	FloatImage& operator = (const FloatImage& c); //assign operator
+	FloatImage(const FloatImage &c);
+	FloatImage &operator=(const FloatImage &c); // assign operator
 
-	//destructor
+	// destructor
 	~FloatImage();
 
-	void Fill(const float& v) { for (unsigned int pos = 0; pos < width * height; ++pos) pixels[pos] = v; }
+	void Fill(const float &v)
+	{
+		for (unsigned int pos = 0; pos < width * height; ++pos)
+			pixels[pos] = v;
+	}
 
-	//get the pixel at position x,y
+	// get the pixel at position x,y
 	float GetPixel(unsigned int x, unsigned int y) const { return pixels[y * width + x]; }
-	float& GetPixelRef(unsigned int x, unsigned int y) { return pixels[y * width + x]; }
+	float &GetPixelRef(unsigned int x, unsigned int y) { return pixels[y * width + x]; }
 
-	//set the pixel at position x,y with value C
-	void SetPixel(unsigned int x, unsigned int y, const float& v) { if (x < 0 || x > width - 1) return; if (y < 0 || y > height - 1) return; pixels[y * width + x] = v; }
-	inline void SetPixelUnsafe(unsigned int x, unsigned int y, const float& v) { pixels[y * width + x] = v; }
+	// set the pixel at position x,y with value C
+	void SetPixel(unsigned int x, unsigned int y, const float &v)
+	{
+		if (x < 0 || x > width - 1)
+			return;
+		if (y < 0 || y > height - 1)
+			return;
+		pixels[y * width + x] = v;
+	}
+	inline void SetPixelUnsafe(unsigned int x, unsigned int y, const float &v) { pixels[y * width + x] = v; }
 
 	void Resize(unsigned int width, unsigned int height);
 };
