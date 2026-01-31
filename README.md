@@ -97,6 +97,10 @@ Remember you can optionally [create your own repository](#creating-your-own-repo
 3. Compile again
 
 ## Linux
+> [!IMPORTANT]
+> The cmake files did not work out of the box for me, I changed it to something that seems to be working.
+> To save you some headaches (:unamused:), I would suggest you going to Windows (:sleeping:).
+
 1. Install *CMake*, libraries and compilers using these commands:
 ```console
 sudo apt install cmake
